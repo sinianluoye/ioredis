@@ -1,7 +1,7 @@
 {
-  "name": "ioredis",
+  "name": "@sinianluoye/ioredis",
   "version": "5.9.2",
-  "description": "A robust, performance-focused and full-featured Redis client for Node.js.",
+  "description": "A copy from ioredis, for better usage on dynamic password",
   "main": "./built/index.js",
   "types": "./built/index.d.ts",
   "files": [
@@ -25,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/luin/ioredis.git"
+    "url": "git://github.com/sinianluoye/ioredis.git"
   },
   "keywords": [
     "redis",
@@ -36,12 +36,8 @@
   "tsd": {
     "directory": "test/typing"
   },
-  "author": "Zihua Li <i@zihua.li> (http://zihua.li)",
+  "author": "sinianluoye <sinianluoye@outlook.com>",
   "license": "MIT",
-  "funding": {
-    "type": "opencollective",
-    "url": "https://opencollective.com/ioredis"
-  },
   "dependencies": {
     "@ioredis/commands": "1.5.0",
     "cluster-key-slot": "^1.1.0",
