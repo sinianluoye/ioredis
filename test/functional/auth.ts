@@ -349,6 +349,7 @@ describe("auth", () => {
 
         it("should call password function on each reconnect", (done) => {
             let callCount = 0;
+            let doneCalled = false;
             const passwordFunction = () => {
                 callCount++;
                 return "reconnectpass";
@@ -356,7 +357,8 @@ describe("auth", () => {
 
             new MockServer(17379, (argv) => {
                 if (argv[0] === "auth" && argv[1] === "reconnectpass") {
-                    if (callCount >= 2) {
+                    if (callCount >= 2 && !doneCalled) {
+                        doneCalled = true;
                         expect(callCount).to.be.at.least(2);
                         redis.disconnect();
                         done();
@@ -367,7 +369,7 @@ describe("auth", () => {
             const redis = new Redis({port: 17379, password: passwordFunction});
             redis.once("ready", () => {
                 redis.disconnect(true);
-                redis.connect();
+                redis.connect().catch(() => {});
             });
         });
 

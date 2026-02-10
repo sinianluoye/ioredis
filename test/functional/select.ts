@@ -54,17 +54,19 @@ describe("select", function () {
   it('should emit "select" event when db changes', (done) => {
     const changes = [];
     const redis = new Redis();
-    redis.on("select", function (db) {
-      changes.push(db);
-    });
-    redis.select("2", function () {
-      expect(changes).to.eql([2]);
-      redis.select("4", function () {
-        expect(changes).to.eql([2, 4]);
+    redis.once("ready", function () {
+      redis.on("select", function (db) {
+        changes.push(db);
+      });
+      redis.select("2", function () {
+        expect(changes).to.eql([2]);
         redis.select("4", function () {
           expect(changes).to.eql([2, 4]);
-          redis.disconnect();
-          done();
+          redis.select("4", function () {
+            expect(changes).to.eql([2, 4]);
+            redis.disconnect();
+            done();
+          });
         });
       });
     });

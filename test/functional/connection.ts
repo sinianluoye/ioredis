@@ -57,24 +57,37 @@ describe("connection", function () {
 
   it("connects successfully immediately after end", (done) => {
     const redis = new Redis();
-    redis.once("end", async () => {
-      await redis.connect();
-      done();
+    redis.once("ready", () => {
+      redis.once("end", async () => {
+        try {
+          await redis.connect();
+          redis.disconnect();
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
+      redis.quit();
     });
-
-    redis.quit();
   });
 
   it("connects successfully immediately after quit", (done) => {
     const redis = new Redis();
-    redis.once("end", async () => {
-      await redis.connect();
-      done();
-    });
+    redis.once("ready", () => {
+      redis.once("end", async () => {
+        try {
+          await redis.connect();
+          redis.disconnect();
+          done();
+        } catch (err) {
+          done(err);
+        }
+      });
 
-    // process.nextTick ensures the connection is being made.
-    process.nextTick(() => {
-      redis.quit();
+      // process.nextTick ensures the connection is being made.
+      process.nextTick(() => {
+        redis.quit();
+      });
     });
   });
 

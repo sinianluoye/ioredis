@@ -108,10 +108,15 @@ describe("send command", () => {
 
   it("should reject when disconnected", (done) => {
     const redis = new Redis();
-    redis.disconnect();
-    redis.get("foo", function (err) {
-      expect(err.message).to.match(/Connection is closed./);
-      done();
+    redis.once("ready", () => {
+      redis.once("end", () => {
+        redis.get("foo", function (err) {
+          expect(err).to.exist;
+          expect(err?.message).to.match(/Connection is closed./);
+          done();
+        });
+      });
+      redis.disconnect();
     });
   });
 

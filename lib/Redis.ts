@@ -106,6 +106,7 @@ class Redis extends Commander implements DataHandledable {
   private connectionEpoch = 0;
   private retryAttempts = 0;
   private manuallyClosing = false;
+  private disconnecting = false;
   private socketTimeoutTimer: NodeJS.Timeout | undefined;
 
   // Prepare autopipelines structures
@@ -125,6 +126,13 @@ class Redis extends Commander implements DataHandledable {
     this.parseOptions(arg1, arg2, arg3);
 
     EventEmitter.call(this);
+
+    // Initialize condition early to prevent undefined access
+    this.condition = {
+      select: this.options.db,
+      auth: null,
+      subscriber: false,
+    };
 
     this.resetCommandQueue();
     this.resetOfflineQueue();
@@ -180,12 +188,19 @@ class Redis extends Commander implements DataHandledable {
         this.status === "connect" ||
         this.status === "ready"
       ) {
-        reject(new Error("Redis is already connecting/connected"));
-        return;
+        // Allow reconnect calls immediately after a disconnect(true) request
+        // has been issued but before the close event fires.
+        if (!this.disconnecting) {
+          reject(new Error("Redis is already connecting/connected"));
+          return;
+        }
       }
 
       this.connectionEpoch += 1;
       this.setStatus("connecting");
+
+      // Reset the disconnecting flag once we start a new connection attempt.
+      this.disconnecting = false;
 
       const { options } = this;
 
@@ -321,6 +336,9 @@ class Redis extends Commander implements DataHandledable {
     if (!reconnect) {
       this.manuallyClosing = true;
     }
+    // Flag that a disconnect was requested so a subsequent reconnect call
+    // can proceed even before the close event fires.
+    this.disconnecting = reconnect;
     if (this.reconnectTimeout && !reconnect) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
